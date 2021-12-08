@@ -16,5 +16,5 @@ jobs:
           name: ghcr.io/afanasievkirill/real_world/real_world_api_example
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          workdir: /real-world-api
+          workdir: ./real-world-api
           tags: "develop"
