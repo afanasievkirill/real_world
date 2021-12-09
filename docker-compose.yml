@@ -13,8 +13,8 @@ services:
 
   db:
     image: postgres:13.1
-    container_name: real_worla_api_db
-    hostname: db
+    container_name: real_world_api_db
+    hostname: real_world_api_db
     restart: always
     ports:
       - 5432:5432
