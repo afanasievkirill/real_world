@@ -13,7 +13,7 @@ services:
 
   db:
     image: postgres:13.1
-    container_name: db
+    container_name: real_worla_api_db
     hostname: db
     restart: always
     ports:
