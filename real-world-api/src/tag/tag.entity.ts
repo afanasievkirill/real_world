@@ -12,3 +12,10 @@ export class TagEntity {
 	@Column()
 	name: string;
 }
+
+export class TagsResponce {
+
+	@ApiProperty()
+	tags: string[];
+}
+

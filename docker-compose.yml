@@ -1,6 +1,13 @@
 version: "3"
 
 services:
+  real_world_api:
+    image: ghcr.io/afanasievkirill/real_world/real_world_api_example:develop
+    container_name: real_world_api
+    restart: unless-stopped
+    command: [ 'npm run typeorm migration:run', 'npm run start' ]
+    depends_on:
+      - real_world_api_db
   pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
@@ -10,7 +17,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "5050:80"
-
   db:
     image: postgres:13.1
     container_name: real_world_api_db
