@@ -1,28 +1,47 @@
-import { Body, Controller, Get, HttpCode, Post, Req, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+	Body,
+	Controller,
+	Get,
+	HttpCode,
+	Post,
+	Put,
+	UseGuards,
+	UsePipes,
+	ValidationPipe
+} from '@nestjs/common';
 import {
 	ApiBadRequestResponse,
+	ApiBearerAuth,
 	ApiBody,
 	ApiCreatedResponse,
 	ApiInternalServerErrorResponse,
 	ApiOkResponse,
 	ApiTags,
+	ApiUnauthorizedResponse,
 	ApiUnprocessableEntityResponse
 } from '@nestjs/swagger';
 import { UserService } from '@app/user/user.service';
 import { CreateUserDto, AppCreateUserDto } from '@app/user/dto/create-user.dto';
 import { IUserResponse } from '@app/user/types/user-responce.interface';
-import { CREDENTIALS_ARE_NOT_VALID_ERROR, EMAIL_OR_USERNAME_ARE_TAKEN_ERROR, REQUEST_DATA_IS_NOT_VALID_ERROR } from '@app/user/user.constants';
+import {
+	CREDENTIALS_ARE_NOT_VALID_ERROR,
+	EMAIL_OR_USERNAME_ARE_TAKEN_ERROR,
+	NOT_AUTHORIZED_ERROR,
+	REQUEST_DATA_IS_NOT_VALID_ERROR
+} from '@app/user/user.constants';
 import { AppLoginUserDto, LoginUserDto } from './dto/login-user.dto';
-import { Request } from 'express';
-import { Any } from 'typeorm';
-import { IExpressRequestInterface } from '@app/types/express-request.interface';
+import { UserResponce } from './dto/user.response';
+import { User } from './decorators/user.decorator';
+import { UserEntity } from './user.entity';
+import { AuthGuard } from './guards/auth.guard';
+import { ApptUpdateUserDto, UpdateUserDto } from './dto/update-user.dto';
 
 @Controller()
 export class UserController {
 	constructor(private readonly userService: UserService) { }
 
 	@ApiTags('users')
-	@ApiCreatedResponse({ description: 'Create User is successfully' })
+	@ApiCreatedResponse({ description: 'Create User is successfully', type: UserResponce })
 	@ApiBadRequestResponse({ description: REQUEST_DATA_IS_NOT_VALID_ERROR })
 	@ApiUnprocessableEntityResponse({ description: EMAIL_OR_USERNAME_ARE_TAKEN_ERROR })
 	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -35,7 +54,7 @@ export class UserController {
 	}
 
 	@ApiTags('users/login')
-	@ApiOkResponse({ description: 'User is successfully logged in' })
+	@ApiOkResponse({ description: 'User is successfully logged in', type: UserResponce })
 	@ApiBadRequestResponse({ description: REQUEST_DATA_IS_NOT_VALID_ERROR })
 	@ApiUnprocessableEntityResponse({ description: CREDENTIALS_ARE_NOT_VALID_ERROR })
 	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -49,9 +68,32 @@ export class UserController {
 	}
 
 	@ApiTags('user')
+	@ApiBearerAuth()
+	@ApiOkResponse({ description: 'Return this user', type: UserResponce })
+	@ApiUnauthorizedResponse({ description: NOT_AUTHORIZED_ERROR })
+	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
 	@Get('user')
-	async getCurentUser(@Req() request: IExpressRequestInterface): Promise<IUserResponse> {
-		return this.userService.buildUserResponce(request.user);
+	@UseGuards(AuthGuard)
+	async getCurentUser(
+		@User() user: UserEntity
+	): Promise<IUserResponse> {
+		return this.userService.buildUserResponce(user);
+	}
+
+	@ApiTags('user')
+	@ApiBearerAuth()
+	@ApiOkResponse({ description: 'Return this user', type: UserResponce })
+	@ApiUnauthorizedResponse({ description: NOT_AUTHORIZED_ERROR })
+	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
+	@ApiBody({ type: ApptUpdateUserDto })
+	@Put('user')
+	@UseGuards(AuthGuard)
+	async updateCurrentUser(
+		@User('id') currentUserId: number,
+		@Body('user') updateUserDto: UpdateUserDto
+	): Promise<IUserResponse> {
+		const user = await this.userService.updateUser(currentUserId, updateUserDto);
+		return this.userService.buildUserResponce(user);
 	}
 
 }

@@ -9,6 +9,7 @@ import { IUserResponse } from '@app/user/types/user-responce.interface';
 import { CREDENTIALS_ARE_NOT_VALID_ERROR, EMAIL_OR_USERNAME_ARE_TAKEN_ERROR } from '@app/user/user.constants';
 import { LoginUserDto } from '@app/user/dto/login-user.dto';
 import { compare } from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -35,7 +36,7 @@ export class UserService {
 			email: loginUserDto.email
 		},
 			{
-				select: ['id', 'email', 'bio', 'image', 'password']
+				select: ['id', 'email', 'bio', 'image', 'username', 'password']
 			}
 		);
 		if (!user) {
@@ -47,6 +48,12 @@ export class UserService {
 		}
 		delete user.password;
 		return user;
+	}
+
+	async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
+		const user = await this.findById(userId);
+		Object.assign(user, updateUserDto);
+		return await this.userRepository.save(user);
 	}
 
 	findById(id: number): Promise<UserEntity> {
