@@ -9,7 +9,7 @@ import { IUserResponse } from '@app/user/types/user-responce.interface';
 import { CREDENTIALS_ARE_NOT_VALID_ERROR, EMAIL_OR_USERNAME_ARE_TAKEN_ERROR } from '@app/user/user.constants';
 import { LoginUserDto } from '@app/user/dto/login-user.dto';
 import { compare } from 'bcrypt';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from '@app/user/dto/update-user.dto';
 
 @Injectable()
 export class UserService {
