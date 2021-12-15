@@ -41,13 +41,42 @@ export class ArticleService {
 			})
 		};
 
+		if (query.favorited) {
+			const author = await this.userRepository.findOne(
+				{
+					username: query.favorited,
+				},
+				{ relations: ['favorites'] },
+			);
+			const ids = author.favorites.map((el) => el.id);
+
+			if (ids.length > 0) {
+				queryBuilder.andWhere('articles.authorId IN (:...ids)', { ids });
+			} else {
+				queryBuilder.andWhere('1=0');
+			}
+		}
+
 		if (query.limit) { queryBuilder.limit(query.limit); };
 
 		if (query.offset) { queryBuilder.offset(query.offset); };
 
-		const articles = await queryBuilder.getMany();
+		let favoriteIds: number[] = []
 
-		return { articles, articlesCount };
+		if (currentUserId) {
+			const currentUser = await this.userRepository.findOne(
+				currentUserId, { relations: ['favorites'] }
+			);
+			favoriteIds = currentUser.favorites.map((favorite) => favorite.id);
+		}
+
+		const articles = await queryBuilder.getMany();
+		const articlesWithFavorites = articles.map(article => {
+			const favorited = favoriteIds.includes(article.id);
+			return { ...article, favorited };
+		})
+
+		return { articles: articlesWithFavorites, articlesCount };
 
 	}
 
@@ -101,6 +130,54 @@ export class ArticleService {
 		}
 		Object.assign(article, updateArticleDto);
 		return await this.articleRepository.save(article);
+	}
+
+	async addArticlesToFavorites(
+		currentUserId: number,
+		slug: string
+	): Promise<ArticleEntity> {
+		const article = await this.articleRepository.findOne({ slug });
+		const user = await this.userRepository.findOne(currentUserId, {
+			relations: ['favorites']
+		})
+		if (!article) {
+			throw new NotFoundException(NOT_FOUND_ARTICLE_ERROR);
+		}
+		const isNotFavorited = user.favorites
+			.findIndex(
+				(articleInFavorites) => articleInFavorites.id === article.id
+			) === -1;
+		if (isNotFavorited) {
+			user.favorites.push(article);
+			article.favoritesCount++;
+			await this.userRepository.save(user);
+			await this.articleRepository.save(article);
+		}
+		return article;
+	}
+
+	async deleteArticlesFromFavorites(
+		currentUserId: number,
+		slug: string
+	): Promise<ArticleEntity> {
+		const article = await this.articleRepository.findOne({ slug });
+		const user = await this.userRepository.findOne(currentUserId, {
+			relations: ['favorites']
+		})
+		if (!article) {
+			throw new NotFoundException(NOT_FOUND_ARTICLE_ERROR);
+		}
+		const articleIndex = user.favorites
+			.findIndex(
+				(articleInFavorites) => articleInFavorites.id === article.id
+			);
+		if (articleIndex >= 0) {
+			user.favorites.splice(articleIndex, 1);
+			article.favoritesCount--;
+			await this.userRepository.save(user);
+			await this.articleRepository.save(article);
+		}
+		return article;
 	}
 
 	buildArticleResponce(article: ArticleEntity): ArticleResponceInterface {

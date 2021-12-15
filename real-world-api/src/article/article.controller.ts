@@ -67,6 +67,32 @@ export class ArticleController {
 		return this.articleService.buildArticleResponce(article);
 	}
 
+	@ApiOkResponse({ description: 'Article is success add to favorites', type: ArticleResponce })
+	@ApiUnauthorizedResponse({ description: NOT_AUTHORIZED_ERROR })
+	@ApiNotFoundResponse({ description: NOT_FOUND_ARTICLE_ERROR })
+	@UseGuards(AuthGuard)
+	@Post(':slug/favorite')
+	async addArticlesToFavorites(
+		@User('id') currentUserId: number,
+		@Param('slug') slug: string
+	): Promise<ArticleResponceInterface> {
+		const article = await this.articleService.addArticlesToFavorites(currentUserId, slug)
+		return this.articleService.buildArticleResponce(article);
+	}
+
+	@ApiOkResponse({ description: 'Article is success remove from favorites', type: ArticleResponce })
+	@ApiUnauthorizedResponse({ description: NOT_AUTHORIZED_ERROR })
+	@ApiNotFoundResponse({ description: NOT_FOUND_ARTICLE_ERROR })
+	@UseGuards(AuthGuard)
+	@Delete(':slug/favorite')
+	async deleteArticlesFromFavorites(
+		@User('id') currentUserId: number,
+		@Param('slug') slug: string
+	): Promise<ArticleResponceInterface> {
+		const article = await this.articleService.deleteArticlesFromFavorites(currentUserId, slug)
+		return this.articleService.buildArticleResponce(article);
+	}
+
 	@ApiOkResponse({ description: 'Article is success delete' })
 	@ApiUnauthorizedResponse({ description: NOT_AUTHORIZED_ERROR })
 	@ApiNotFoundResponse({ description: NOT_FOUND_ARTICLE_ERROR })

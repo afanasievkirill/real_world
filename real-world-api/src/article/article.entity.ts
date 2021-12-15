@@ -47,7 +47,7 @@ export class ArticleEntity {
 	}
 
 	@ApiProperty({ type: () => UserEntity })
-	@ManyToOne(() => UserEntity, user => user.articles, { eager: true })
+	@ManyToOne(() => UserEntity, (user) => user.articles, { eager: true })
 	author: UserEntity;
 
 }
