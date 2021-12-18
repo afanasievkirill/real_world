@@ -1,0 +1,1 @@
+export const PROFILE_DOES_NOT_EXSIST_ERROR = 'Profile does not exists';
