@@ -35,6 +35,7 @@ import { User } from './decorators/user.decorator';
 import { UserEntity } from './user.entity';
 import { AuthGuard } from './guards/auth.guard';
 import { ApptUpdateUserDto, UpdateUserDto } from './dto/update-user.dto';
+import { BackendValidationPype } from '@app/shared/pipes/backend-validation.pype';
 
 @Controller()
 export class UserController {
@@ -46,7 +47,7 @@ export class UserController {
 	@ApiUnprocessableEntityResponse({ description: EMAIL_OR_USERNAME_ARE_TAKEN_ERROR })
 	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
 	@ApiBody({ type: AppCreateUserDto })
-	@UsePipes(new ValidationPipe())
+	@UsePipes(new BackendValidationPype())
 	@Post('users')
 	async createUser(@Body('user') createUserDto: CreateUserDto): Promise<IUserResponse> {
 		const user = await this.userService.createUser(createUserDto);

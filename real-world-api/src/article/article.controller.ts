@@ -1,3 +1,4 @@
+import { BackendValidationPype } from '@app/shared/pipes/backend-validation.pype';
 import { User } from '@app/user/decorators/user.decorator';
 import { AuthGuard } from '@app/user/guards/auth.guard';
 import { NOT_AUTHORIZED_ERROR } from '@app/user/user.constants';
@@ -40,6 +41,15 @@ export class ArticleController {
 		return this.articleService.buildArticleResponce(article);
 	}
 
+	@Get('feed')
+	@UseGuards(AuthGuard)
+	async getFeed(
+		@User('id') currentUser: number,
+		@Query() query: any
+	): Promise<ArticlesResponceInterface> {
+		return await this.articleService.getFeed(currentUser, query);
+	}
+
 	@ApiOkResponse({ description: 'Return article by slug', type: ArticleResponce })
 	@ApiNotFoundResponse({ description: NOT_FOUND_ARTICLE_ERROR })
 	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -56,6 +66,7 @@ export class ArticleController {
 	@ApiForbiddenResponse({ description: NOT_AUTHOR_ERROR })
 	@ApiInternalServerErrorResponse({ description: 'Internal server error' })
 	@UseGuards(AuthGuard)
+	@UsePipes(new BackendValidationPype())
 	@ApiBody({ type: AppUpdateArticleDto })
 	@Put(':slug')
 	async updateArticle(
